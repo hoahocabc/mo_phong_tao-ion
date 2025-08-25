@@ -1,5 +1,5 @@
-let atomicInput, addButton, removeButton, resetButton, guideButton, toggleOrbitButton, symbolSpan;
-let controlPanel, inputRow, toggleRow, addRow, removeRow, resetRow, guideRow, infoPanel;
+let atomicInput, addButton, removeButton, resetButton, guideButton, toggleOrbitButton, toggleOuterShellButton, symbolSpan;
+let controlPanel, inputRow, toggleRow, addRow, removeRow, resetRow, guideRow, toggleOuterShellRow, infoPanel;
 let guidePopup, overlay;
 let topLabel, bottomLabel;
 let atomicNumber = 0;
@@ -7,10 +7,12 @@ let electronCount = 0;
 let shells = [];
 let myFont;
 let isOrbiting = true;
-let rotateElectrons = true; // electron rotation flag
+let rotateElectrons = true;
+let showOuterShell = false;
 let rotationOffset = 0;
 let systemOffset;
 let cam;
+let rotationAngle = 0;
 
 // Mảng để lưu lịch sử các trạng thái đã bớt electron
 let removedElectronHistory = [];
@@ -61,11 +63,11 @@ const specialConfigurations = {
 };
 
 const electronConfigurations = {
-  1: "1s¹", 2: "1s²", 3: "1s² 2s¹", 4: "1s² 2s²", 5: "1s² 2s² 2p¹", 6: "1s² 2s² 2p²", 7: "1s² 2s² 2p³", 8: "1s² 2s² 2p⁴", 9: "1s² 2s² 2p⁵", 10: "1s² 2s² 2p⁶", 11: "1s² 2s² 2p⁶ 3s¹", 12: "1s² 2s² 2p⁶ 3s²", 13: "1s² 2s² 2p⁶ 3s² 3p¹", 14: "1s² 2s² 2p⁶ 3s² 3p²", 15: "1s² 2s² 2p⁶ 3s² 3p³", 16: "1s² 2s² 2p⁶ 3s² 3p⁴", 17: "1s² 2s² 2p⁶ 3s² 3p⁵", 18: "1s² 2s² 2p⁶ 3s² 3p⁶", 19: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s¹", 20: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s²", 21: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹ 4s²", 22: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d² 4s²", 23: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d³ 4s²", 24: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s¹", 25: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s²", 26: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁶ 4s²", 27: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁷ 4s²", 28: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁸ 4s²", 29: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s¹", 30: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s²", 31: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p¹", 32: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p²", 33: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p³", 34: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁴", 35: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁵", 36: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶", 37: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 5s¹", 38: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 5s²", 39: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹ 5s²", 40: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d² 5s²", 41: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁴ 5s¹", 42: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁵ 5s¹", 43: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁵ 5s²", 44: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁷ 5s¹", 45: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁸ 5s¹", 46: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰", 47: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s¹", 48: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s²", 49: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p¹", 50: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p²", 51: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p³", 52: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁴", 53: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁵", 54: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶", 55: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 6s¹", 56: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 6s²", 57: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 5d¹ 6s²", 58: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹ 5s² 5p⁶ 5d¹ 6s²", 59: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f³ 5s² 5p⁶ 6s²", 60: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁴ 5s² 5p⁶ 6s²", 61: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁵ 5s² 5p⁶ 6s²", 62: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁶ 5s² 5p⁶ 6s²", 63: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁷ 5s² 5p⁶ 6s²", 64: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁷ 5s² 5p⁶ 5d¹ 6s²", 65: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁹ 5s² 5p⁶ 6s²", 66: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁰ 5s² 5p⁶ 6s²", 67: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹¹ 5s² 5p⁶ 6s²", 68: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹² 5s² 5p⁶ 6s²", 69: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹³ 5s² 5p⁶ 6s²", 70: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 6s²", 71: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹ 6s²", 72: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d² 6s²", 73: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d³ 6s²", 74: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁴ 6s²", 75: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁵ 6s²", 76: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁶ 6s²", 77: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁷ 6s²", 78: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁹ 6s¹", 79: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s¹", 80: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s²", 81: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p¹", 82: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p²", 83: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p³", 84: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁴", 85: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁵", 86: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶", 87: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶ 7s¹", 88: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶ 7s²", 89: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶ 6d¹ 7s²", 90: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶ 6d² 7s²", 91: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f² 6s² 6p⁶ 6d¹ 7s²", 92: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f³ 6s² 6p⁶ 6d¹ 7s²", 93: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁴ 6s² 6p⁶ 6d¹ 7s²", 94: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁶ 6s² 6p⁶ 7s²", 95: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁷ 6s² 6p⁶ 7s²", 96: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁷ 6s² 6p⁶ 6d¹ 7s²", 97: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁹ 6s² 6p⁶ 7s²", 98: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹⁰ 6s² 6p⁶ 7s²", 99: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹¹ 6s² 6p⁶ 7s²", 100: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹² 6s² 6p⁶ 7s²", 101: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹³ 6s² 6p⁶ 7s²", 102: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹⁴ 6s² 6p⁶ 7s²", 103: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹⁴ 6s² 6p⁶ 7s² 7p¹", 104: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d² 7s²", 105: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d³ 7s²", 106: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁴ 7s²", 107: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁵ 7s²", 108: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁶ 7s²", 109: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁷ 7s²", 110: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁸ 7s²", 111: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁹ 7s²", 112: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s²", 113: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p¹", 114: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p²", 115: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p³", 116: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p⁴", 117: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p⁵", 118: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p⁶"
+  1: "1s¹", 2: "1s²", 3: "1s² 2s¹", 4: "1s² 2s²", 5: "1s² 2s² 2p¹", 6: "1s² 2s² 2p²", 7: "1s² 2s² 2p³", 8: "1s² 2s² 2p⁴", 9: "1s² 2s² 2p⁵", 10: "1s² 2s² 2p⁶", 11: "1s² 2s² 2p⁶ 3s¹", 12: "1s² 2s² 2p⁶ 3s²", 13: "1s² 2s² 2p⁶ 3s² 3p¹", 14: "1s² 2s² 2p⁶ 3s² 3p²", 15: "1s² 2s² 2p⁶ 3s² 3p³", 16: "1s² 2s² 2p⁶ 3s² 3p⁴", 17: "1s² 2s² 2p⁶ 3s² 3p⁵", 18: "1s² 2s² 2p⁶ 3s² 3p⁶", 19: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s¹", 20: "1s² 2s² 2p⁶ 3s² 3p⁶ 4s²", 21: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹ 4s²", 22: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d² 4s²", 23: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d³ 4s²", 24: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s¹", 25: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s²", 26: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁶ 4s²", 27: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁷ 4s²", 28: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁸ 4s²", 29: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s¹", 30: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s²", 31: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p¹", 32: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p²", 33: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p³", 34: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁴", 35: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁵", 36: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶", 37: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 5s¹", 38: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 5s²", 39: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹ 5s²", 40: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d² 5s²", 41: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁴ 5s¹", 42: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁵ 5s¹", 43: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁵ 5s²", 44: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁷ 5s¹", 45: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d⁸ 5s¹", 46: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰", 47: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s¹", 48: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s²", 49: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p¹", 50: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p²", 51: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p³", 52: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁴", 53: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁵", 54: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶", 55: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 6s¹", 56: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 6s²", 57: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 5d¹ 6s²", 58: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹ 5s² 5p⁶ 5d¹ 6s²", 59: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f³ 5s² 5p⁶ 6s²", 60: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁴ 5s² 5p⁶ 6s²", 61: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁵ 5s² 5p⁶ 6s²", 62: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁶ 5s² 5p⁶ 6s²", 63: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁷ 5s² 5p⁶ 6s²", 64: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁷ 5s² 5p⁶ 5d¹ 6s²", 65: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁹ 5s² 5p⁶ 6s²", 66: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁰ 5s² 5p⁶ 6s²", 67: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹¹ 5s² 5p⁶ 6s²", 68: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹² 5s² 5p⁶ 6s²", 69: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹³ 5s² 5p⁶ 6s²", 70: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 6s²", 71: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹ 6s²", 72: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d² 6s²", 73: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d³ 6s²", 74: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁴ 6s²", 75: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁵ 6s²", 76: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁶ 6s²", 77: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁷ 6s²", 78: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d⁹ 6s¹", 79: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s¹", 80: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s²", 81: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p¹", 82: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p²", 83: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p³", 84: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁴", 85: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁵", 86: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶", 87: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶ 7s¹", 88: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶ 7s²", 89: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶ 6d¹ 7s²", 90: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 6s² 6p⁶ 6d² 7s²", 91: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f² 6s² 6p⁶ 6d¹ 7s²", 92: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f³ 6s² 6p⁶ 6d¹ 7s²", 93: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁴ 6s² 6p⁶ 6d¹ 7s²", 94: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁶ 6s² 6p⁶ 7s²", 95: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁷ 6s² 6p⁶ 7s²", 96: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁷ 6s² 6p⁶ 6d¹ 7s²", 97: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f⁹ 6s² 6p⁶ 7s²", 98: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹⁰ 6s² 6p⁶ 7s²", 99: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹¹ 6s² 6p⁶ 7s²", 100: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹² 6s² 6p⁶ 7s²", 101: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹³ 6s² 6p⁶ 7s²", 102: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 5f¹⁴ 6s² 6p⁶ 7s²", 103: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 7s² 7p¹", 104: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d² 7s²", 105: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d³ 7s²", 106: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁴ 7s²", 107: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁵ 7s²", 108: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁶ 7s²", 109: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁷ 7s²", 110: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁸ 7s²", 111: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d⁹ 7s²", 112: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s²", 113: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p¹", 114: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p²", 115: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p³", 116: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p⁴", 117: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p⁵", 118: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹⁴ 5s² 5p⁶ 5d¹⁰ 4f¹⁴ 6s² 6p⁶ 6d¹⁰ 7s² 7p⁶"
 };
 
 function preload() {
-  myFont = loadFont('Arial.ttf'); // change to your font if needed
+  myFont = loadFont('Arial.ttf');
 }
 
 function setup() {
@@ -150,7 +152,6 @@ function setup() {
   toggleOrbitButton.style("color", "#fff");
   toggleOrbitButton.style("border", "none");
   toggleOrbitButton.style("border-radius", "4px");
-  // Add hover effects for the toggle button
   toggleOrbitButton.mouseOver(() => toggleOrbitButton.style("background-color", "#1976D2"));
   toggleOrbitButton.mouseOut(() => toggleOrbitButton.style("background-color", "#2196F3"));
   toggleOrbitButton.mousePressed(() => {
@@ -181,7 +182,18 @@ function setup() {
   styleButton(removeButton);
   removeButton.mousePressed(removeElectron);
 
-  // Row 5: Reset button.
+  // Row 5: Toggle Outer Shell button
+  toggleOuterShellRow = createDiv();
+  toggleOuterShellRow.parent(controlPanel);
+  toggleOuterShellRow.style("display", "flex");
+  toggleOuterShellRow.style("align-items", "center");
+
+  toggleOuterShellButton = createButton('Bật lớp cầu');
+  toggleOuterShellButton.parent(toggleOuterShellRow);
+  styleButton(toggleOuterShellButton);
+  toggleOuterShellButton.mousePressed(toggleOuterShell);
+
+  // Row 6: Reset button.
   resetRow = createDiv();
   resetRow.parent(controlPanel);
   resetRow.style("display", "flex");
@@ -192,7 +204,7 @@ function setup() {
   styleButton(resetButton);
   resetButton.mousePressed(resetSystem);
 
-  // Row 6: Guide button.
+  // Row 7: Guide button.
   guideRow = createDiv();
   guideRow.parent(controlPanel);
   guideRow.style("display", "flex");
@@ -257,14 +269,15 @@ function setup() {
   popupTitle.parent(guidePopup);
   popupTitle.style('margin-top', '0');
   popupTitle.style('color', '#2196F3');
-  popupTitle.style('text-align', 'center'); // <-- Dòng được thêm vào
+  popupTitle.style('text-align', 'center');
 
   let guideContent = `
       <ul>
-          <li><b>Số hiệu Z:</b> Nhập số hiệu nguyên tử để hiển thị mô hình.</li>
-          <li><b>Thêm/Bớt electron:</b> Điều chỉnh số electron để tạo ion. Khi bớt electron, sẽ bớt từ lớp ngoài cùng.</li>
-          <li><b>Tương tác:</b> Dùng chuột trái để xoay và con lăn để thu phóng.</li>
-          <li><b>Bật/Tắt quay electron:</b> Khi chuyển trạng thái, góc quay không thay đổi đột ngột, giúp tránh cảm giác giật.</li>
+        <li><b>Số hiệu Z:</b> Nhập số hiệu nguyên tử để hiển thị mô hình.</li>
+        <li><b>Thêm/Bớt electron:</b> Điều chỉnh số electron để tạo ion. Khi bớt electron, sẽ bớt từ lớp ngoài cùng.</li>
+        <li><b>Tương tác:</b> Dùng chuột trái để xoay và con lăn để thu phóng.</li>
+        <li><b>Bật/Tắt quay electron:</b> Khi chuyển trạng thái, góc quay không thay đổi đột ngột, giúp tránh cảm giác giật.</li>
+        <li><b>Bật/Tắt lớp cầu:</b> Hiển thị lớp cầu bao quanh electron ngoài cùng.</li>
       </ul>
   `;
   let guideText = createDiv(guideContent);
@@ -306,11 +319,18 @@ function mouseDragged() {
 
 function draw() {
   background(0);
+  
+  // Tăng góc quay liên tục cho ánh sáng và mặt cầu
+  rotationAngle += 0.01;
+
+  // Tính toán vị trí của nguồn sáng
+  let lightX = cos(rotationAngle) * 300;
+  let lightY = sin(rotationAngle) * 300;
 
   // Set up lights.
   ambientLight(60);
-  directionalLight(230, 230, 230, 0, 0, -1);
-  directionalLight(80, 80, 80, 1, 0, 0);
+  directionalLight(230, 230, 230, lightX, lightY, 0); // Thay đổi vị trí nguồn sáng
+  directionalLight(80, 80, 80, -lightX, -lightY, 0);
   directionalLight(120, 120, 120, 0, -1, 0);
 
   let uiWidth = controlPanel.elt.offsetWidth + 20;
@@ -322,42 +342,30 @@ function draw() {
   }
 
   cam.lookAt(nucleusX + systemOffset.x, systemOffset.y, 0);
-
+  
+  // Vị trí của toàn bộ hệ thống
   push();
   translate(nucleusX + systemOffset.x, systemOffset.y, 0);
 
-  // Draw the nucleus.
+  // Vẽ mặt cầu ở trung tâm và chỉ xoay nó
   push();
+  rotateX(rotationAngle * 0.3);
+  rotateY(rotationAngle * 0.5);
+  rotateZ(rotationAngle * 0.7);
   fill(255, 100, 100);
   noStroke();
   sphere(20);
-  push();
-  translate(0, 0, 21);
-  fill(255);
-  textSize(12);
-  textAlign(CENTER, CENTER);
-  text("+" + atomicNumber, 0, 0);
-  pop();
   pop();
 
-  // Draw electron information (if available).
-  if (shells.length > 0) {
+  // Vẽ lớp vỏ ngoài cùng nếu được bật và có electron
+  if (showOuterShell && shells.length > 0) {
     let outerRadius = 40 + (shells.length - 1) * 30;
-    let netCharge = atomicNumber - electronCount;
-    let chargeStr = formatCharge(netCharge);
-    let angle = -PI / 4;
-    let labelX = (outerRadius + 20) * cos(angle);
-    let labelY = (outerRadius + 20) * sin(angle) - 20;
-
+    
     push();
-    noLights();
-    drawingContext.disable(drawingContext.DEPTH_TEST);
-    translate(labelX, labelY, 0);
-    fill(255);
-    textSize(24);
-    textAlign(CENTER, CENTER);
-    text(chargeStr, 0, 0);
-    drawingContext.enable(drawingContext.DEPTH_TEST);
+    noStroke();
+    shininess(255);
+    specularMaterial(0, 180, 255);
+    sphere(outerRadius + 7, 64, 64);
     pop();
   }
 
@@ -365,7 +373,7 @@ function draw() {
     rotationOffset += 0.02;
   }
 
-  // Draw electron orbits and electrons.
+  // Vẽ quỹ đạo electron và các electron
   for (let i = 0; i < shells.length; i++) {
     let radius = 40 + i * 30;
     push();
@@ -387,17 +395,62 @@ function draw() {
       fill(0, 180, 255);
       noStroke();
       sphere(6);
+      pop();
+    }
+  }
+
+  // Vẽ nhãn điện tích hạt nhân
+  push();
+  translate(0, 0, 21);
+  fill(255);
+  textSize(12);
+  textAlign(CENTER, CENTER);
+  text("+" + atomicNumber, 0, 0);
+  pop();
+
+  // Vẽ nhãn điện tích tổng
+  if (shells.length > 0) {
+    let outerRadius = 40 + (shells.length - 1) * 30;
+    let netCharge = atomicNumber - electronCount;
+    let chargeStr = formatCharge(netCharge);
+    let angle = -PI / 4;
+    let labelX = (outerRadius + 20) * cos(angle);
+    let labelY = (outerRadius + 20) * sin(angle) - 20;
+
+    push();
+    noLights();
+    drawingContext.disable(drawingContext.DEPTH_TEST);
+    translate(labelX, labelY, 0);
+    fill(255);
+    textSize(24);
+    textAlign(CENTER, CENTER);
+    text(chargeStr, 0, 0);
+    drawingContext.enable(drawingContext.DEPTH_TEST);
+    pop();
+  }
+
+  // Vẽ nhãn electron
+  for (let i = 0; i < shells.length; i++) {
+    let radius = 40 + i * 30;
+    let electronsInThisShell = shells[i];
+    for (let j = 0; j < electronsInThisShell; j++) {
+      let baseAngle = j * TWO_PI / electronsInThisShell;
+      let angle = baseAngle + rotationOffset;
+      let x = radius * cos(angle);
+      let y = radius * sin(angle);
+
       push();
+      translate(x, y, 0);
       translate(0, -2, 7);
       fill(255);
       textSize(18);
       textAlign(CENTER, CENTER);
       text("-", 0, 0);
       pop();
-      pop();
     }
   }
-  pop();
+
+  pop(); // Kết thúc phép tịnh tiến cho toàn bộ hệ thống
 
   updateInfoPanel();
 }
@@ -432,7 +485,9 @@ function resetStateAndBuildModel(z) {
   atomicNumber = z;
   electronCount = z;
   shells = [];
-  removedElectronHistory = []; // Đảm bảo lịch sử được xóa hoàn toàn
+  removedElectronHistory = [];
+  showOuterShell = false;
+  toggleOuterShellButton.html('Bật lớp cầu');
 
   if (atomicNumber > 0) {
     shells = calculateShells(electronCount);
@@ -449,7 +504,7 @@ function resetStateAndBuildModel(z) {
  * Ví dụ: "1s² 2s² 2p⁶ 3s²" -> [2, 8, 2]
  * @param {string} configStr - Chuỗi cấu hình electron.
  * @returns {Array<number>} - Mảng số electron trên mỗi lớp.
- */
+*/
 function parseConfig(configStr) {
   const shellsArray = [];
   if (!configStr) return shellsArray;
@@ -554,7 +609,7 @@ function rebuildConfig(newElectronCount) {
     } else {
       tempElectronCount -= electronsToFill;
     }
-    
+
     if (!finalConfig[n]) finalConfig[n] = {};
     finalConfig[n][subshell] = electronsToFill;
   }
@@ -726,7 +781,7 @@ function updateModelFromElectronCount() {
 
 function resetSystem() {
   resetStateAndBuildModel(0);
-  atomicInput.value(''); // Thêm dòng này để xóa giá trị của input
+  atomicInput.value('');
 }
 
 function formatCharge(charge) {
@@ -784,4 +839,9 @@ function styleButton(btn) {
   btn.style("border-radius", "4px");
   btn.mouseOver(() => btn.style("background-color", "#1976D2"));
   btn.mouseOut(() => btn.style("background-color", "#2196F3"));
+}
+
+function toggleOuterShell() {
+  showOuterShell = !showOuterShell;
+  toggleOuterShellButton.html(showOuterShell ? 'Tắt lớp cầu' : 'Bật lớp cầu');
 }
