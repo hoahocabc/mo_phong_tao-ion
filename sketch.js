@@ -294,6 +294,10 @@ function setup() {
   overlay.mousePressed(closeGuide);
 }
 
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
 function isMouseOverUI() {
   if (guidePopup.style('display') !== 'none') return true;
   let rectControl = controlPanel.elt.getBoundingClientRect();
