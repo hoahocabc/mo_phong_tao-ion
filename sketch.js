@@ -119,8 +119,8 @@ const specialConfigurations = {
 };
 
 // ------------------ full electronConfigurations 1..118 ------------------
-// Using common spectroscopic notation with unicode superscripts for readability.
-// For superheavy elements (>= 102) some entries are representative placeholders.
+// Using common spectroscopic notation with unicode superscripts.
+// For some superheavy elements entries are representative rather than definitive.
 const electronConfigurations = {
   1: "1s¹",
   2: "1s²",
@@ -145,12 +145,12 @@ const electronConfigurations = {
   21: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹ 4s²",
   22: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d² 4s²",
   23: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d³ 4s²",
-  24: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s¹", // Cr
+  24: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s¹",
   25: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁵ 4s²",
   26: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁶ 4s²",
   27: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁷ 4s²",
   28: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d⁸ 4s²",
-  29: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s¹", // Cu
+  29: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s¹",
   30: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s²",
   31: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p¹",
   32: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p²",
@@ -178,7 +178,7 @@ const electronConfigurations = {
   54: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶",
   55: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 6s¹",
   56: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 6s²",
-  57: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 5d¹ 6s²", // La sometimes 5d1 6s2
+  57: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 5s² 5p⁶ 5d¹ 6s²",
   58: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f¹ 5s² 5p⁶ 6s²",
   59: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f³ 5s² 5p⁶ 6s²",
   60: "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹⁰ 4s² 4p⁶ 4d¹⁰ 4f⁴ 5s² 5p⁶ 6s²",
@@ -254,6 +254,17 @@ function chargeToSuperscript(charge) {
   return String(absc).split('').map(d => superscriptDigits[d] || '').join('') + sign;
 }
 function getIonSymbol(sym, netCharge) { if (!sym) return ''; return sym + chargeToSuperscript(netCharge); }
+
+// NEW: Produce HTML string using <sup> for ion charge (clearer than unicode-only)
+function getIonSymbolHTML(sym, netCharge) {
+  if (!sym) return '';
+  if (!netCharge || netCharge === 0) return sym;
+  const absc = Math.abs(netCharge);
+  const sign = netCharge > 0 ? '+' : '-';
+  const supInner = (absc === 1) ? sign : (absc + sign);
+  return `${sym}<sup>${supInner}</sup>`;
+}
+
 const romanNumbers = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 function toRoman(n) { if (n > 0 && n < romanNumbers.length) return romanNumbers[n]; return n.toString(); }
 function isTransitionLike(z) { return (z >= 21 && z <= 30) || (z >= 39 && z <= 48) || (z >= 57 && z <= 80); }
@@ -406,7 +417,7 @@ function setup() {
       <li><b>Số hiệu Z:</b> Nhập số hiệu nguyên tử (1..118) để hiển thị mô hình.</li>
       <li><b>Thêm/Bớt electron:</b> Điều chỉnh số electron để tạo ion.</li>
       <li><b>Tương tác:</b> Dùng chuột trái để xoay và con lăn để thu phóng.</li>
-      <li><b>Ghi chú:</b> Nhãn bên phải: trung hòa -> "Ký hiệu (Tên)"; ion -> chỉ hiển thị ký hiệu ion (ví dụ Na⁺).</li>
+      <li><b>Ghi chú:</b> Nhãn bên phải: trung hòa -> "Ký hiệu (Tên)"; ion -> chỉ hiển thị ký hiệu ion (ví dụ Na<sup>+</sup>).</li>
     </ul>
   `;
   let guideText = createDiv(guideContent); guideText.parent(guidePopup); guideText.style('font-size','14px');
@@ -736,7 +747,7 @@ function worldToScreen(x, y, z) {
   return { sx, sy };
 }
 
-// UPDATED: element label shows Symbol (Name) when neutral; when ionized shows only ion symbol
+// UPDATED: element label shows Symbol (Name) when neutral; when ionized shows only ion symbol using <sup>
 function updateElementLabel(nucleusX) {
   if (atomicNumber <= 0) {
     elementLabel.style('display', 'none');
@@ -759,15 +770,14 @@ function updateElementLabel(nucleusX) {
   let name = elementNames[atomicNumber] ? elementNames[atomicNumber] : "";
 
   let netCharge = atomicNumber - electronCount;
-  let labelText;
+  let labelHTML;
   if (netCharge === 0) {
-    labelText = `${sym} (${name})`;
+    labelHTML = `${sym} (${name})`;
   } else {
-    let ionSym = getIonSymbol(sym, netCharge);
-    labelText = `${ionSym}`;
+    labelHTML = getIonSymbolHTML(sym, netCharge);
   }
 
-  elementLabel.html(labelText);
+  elementLabel.html(labelHTML);
   elementLabel.style('left', `${pageX + gapPx}px`);
   elementLabel.style('top', `${pageY}px`);
   elementLabel.style('display', 'block');
